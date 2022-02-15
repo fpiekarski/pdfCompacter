@@ -8,7 +8,7 @@ Use the npm install to install all dependencies
 install ghostscript https://ghostscript.com/
 
 ## Usage
-run in terminal the command >  "npm run dev"
+run in terminal the command >  "npm run dev" /n
 access the navigator in https://localhost:7000/pdf 
 
 ## Contributing
