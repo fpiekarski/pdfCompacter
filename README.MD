@@ -1,10 +1,11 @@
 # Foobar
 
-PDF Compactor is a PDF Document Compressor, made in Node JS
+PDF Compactor is a PDF Document Compressor, made in Node JS for linux SO
 
 ## Installation
 
 Use the npm install to install all dependencies
+install ghostscript https://ghostscript.com/
 
 ## Usage
 run in terminal the command >  "npm run dev"
