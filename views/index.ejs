@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+
+<head>
+    <meta charset="utf-8">
+    <title>Drag and Drop File Uploading</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    
+    <link rel="stylesheet" href="./css/frame/materialicons.css">
+    <link rel="stylesheet" href="./css/frame/materialize.min.css">
+    <!-- <link rel="stylesheet" href="./css/app/style.css"> -->
+    <link rel="stylesheet" href="./css/app/app.css" />
+    <script src="./js/frame/jquery.js"></script>
+    <script src="./js/frame/materialize.js"></script>
+  
+
+    <script>(function (e, t, n) { var r = e.querySelectorAll("html")[0]; r.className = r.className.replace(/(^|\s)no-js(\s|$)/, "$1js$2") })(document, window, 0);</script>
+</head>
+
+<body>
+    <header>
+
+        <div class="row col s12">
+            
+            <div class="row col s2">
+                
+            </div>
+            <div class="row col s6 white-text" style="margin-top:3%">
+                <h5>Compactador de PDF</h5>
+            </div>
+        </div>
+    </header>
+    <div class="container1 center" role="main" style="margin-top: 8%;height: 800px;">
+        <form method="post" action="./upload2" enctype="multipart/form-data" novalidate class="box center" style="border-radius: 16px;height: 80%;">
+            <div class="row col s8 center box__input " s>
+                <svg class="box__icon"  width="50" height="43" viewBox="0 0 50 43">
+                    <path
+                        d="M48.4 26.5c-.9 0-1.7.7-1.7 1.7v11.6h-43.3v-11.6c0-.9-.7-1.7-1.7-1.7s-1.7.7-1.7 1.7v13.2c0 .9.7 1.7 1.7 1.7h46.7c.9 0 1.7-.7 1.7-1.7v-13.2c0-1-.7-1.7-1.7-1.7zm-24.5 6.1c.3.3.8.5 1.2.5.4 0 .9-.2 1.2-.5l10-11.6c.7-.7.7-1.7 0-2.4s-1.7-.7-2.4 0l-7.1 8.3v-25.3c0-.9-.7-1.7-1.7-1.7s-1.7.7-1.7 1.7v25.3l-7.1-8.3c-.7-.7-1.7-.7-2.4 0s-.7 1.7 0 2.4l10 11.6z" />
+                </svg>
+                <input type="file" name="file" multiple id="file" required class="box__file" max=1 accept="application/pdf"   data-multiple-caption="{count} arquivos selecionados"  />
+                <label class=" blue-grey-text darken-4-text" for="file" style="border:1px dotted;font-size: 2rem;"><strong style="font-size: 2rem;" >Clique para selecionar </strong><h5><span class="box__dragndrop"> ou arraste um ou mais arquivos aqui</span></h5></label>
+                <p></p>
+                <div class="container offset-s1 col s10 center" style="border: 1px dotted; background-color: #d7dbdc!important; ">
+
+                    <label class="darken-4-text light-blue-text" for="v"><h5>
+
+                        Qualidade de compressão, quanto maior a compressão, pior a qualidade do arquivo, e menor
+                        seu tamanho. O padrão é 3
+                    </h5>
+                </label></p>
+                        <div class="row col col s12" style="padding-left: 13%;">
+                            <!-- <input type="range" id="test5" min="0" max="100" /> -->
+                            
+                                <div class="col s1">
+
+                                    <i id="reduz" onclick="setValue(0)"class="material-icons pointer">remove</i>
+                                </div>
+                            
+                            <div class="col s8">
+                                    <p class="range-field ">
+                                    
+                                    <input class=" center col s12" type="range" id="v" step="1" required min="1" max="5" name="v" value=3   oninput="document.getElementById('range').innerHTML = this.value">
+                                </p>
+                                <output class="center" id="range">3</output>
+                            </div>
+                            
+                            <div class="col s1">
+                                
+                                <i id="aumenta" onclick="setValue(1)" class="material-icons pointer">add</i>
+                            </div>
+                        </div>
+                            
+                        </div>
+                </div>
+                <button type="submit" class=" btn-small box__button" >Upload</button>
+            <div class="box__uploading">Processando...</div>
+            
+        </form>
+      
+    </div>
+
+
+
+    <script>
+
+        'use strict';
+
+        ; (function (document, window, index) {
+            // feature detection for drag&drop upload
+            var isAdvancedUpload = function () {
+                var div = document.createElement('div');
+                return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FileReader' in window;
+            }();
+
+
+            // applying the effect for every form
+            var forms = document.querySelectorAll('.box');
+            Array.prototype.forEach.call(forms, function (form) {
+                var input = form.querySelector('input[type="file"]'),
+                    label = form.querySelector('label'),
+                    errorMsg = form.querySelector('.box__error span'),
+                    restart = form.querySelectorAll('.box__restart'),
+                    droppedFiles = false,
+                    showFiles = function (files) {
+                        label.textContent = droppedFiles.length > 1 ? (input.getAttribute('data-multiple-caption') || '').replace('{count}', droppedFiles.length) : files[0].name;
+                    },
+                    triggerFormSubmit = function () {
+                        var event = document.createEvent('HTMLEvents');
+                        event.initEvent('submit', true, false);
+                        form.dispatchEvent(event);
+                    };
+
+                // letting the server side to know we are going to make an Ajax request
+                var ajaxFlag = document.createElement('input');
+                ajaxFlag.setAttribute('type', 'hidden');
+                ajaxFlag.setAttribute('name', 'ajax');
+                ajaxFlag.setAttribute('value', 1);
+                form.appendChild(ajaxFlag);
+
+                // automatically submit the form on file select
+                input.addEventListener('change', function (e) {
+                    droppedFiles = e.target.files
+                    for (let r of droppedFiles){
+                            if(r.name.substring(r.name.length,r.name.length-3)!="pdf"){
+                            
+                            alert('Somente arquivos pdf são permitidos')
+                            return False
+                            }
+                            }
+                        showFiles([droppedFiles[0]]);
+
+
+                });
+
+                // drag&drop files if the feature is available
+                if (isAdvancedUpload) {
+                    form.classList.add('has-advanced-upload'); // letting the CSS part to know drag&drop is supported by the browser
+
+                    ['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach(function (event) {
+                        form.addEventListener(event, function (e) {
+                            // preventing the unwanted behaviours
+                            e.preventDefault();
+                            e.stopPropagation();
+                        });
+                    });
+                    ['dragover', 'dragenter'].forEach(function (event) {
+                        form.addEventListener(event, function () {
+                            form.classList.add('is-dragover');
+                        });
+                    });
+                    ['dragleave', 'dragend', 'drop'].forEach(function (event) {
+                        form.addEventListener(event, function () {
+                            form.classList.remove('is-dragover');
+                        });
+                    });
+                    form.addEventListener('drop', function (e) {
+                        console.log(e)
+                        droppedFiles = e.dataTransfer.files; // the files that were dropped
+                        console.log(droppedFiles)
+                        for (let r of droppedFiles){
+                            if(r.name.substring(r.name.length,r.name.length-3)!="pdf"){
+                            
+                            alert('Somente arquivos pdf são permitidos')
+                            return False
+                            }
+                            }
+                        showFiles([droppedFiles[0]]);
+
+                    });
+                }
+
+
+                // if the form was submitted
+                form.addEventListener('submit', function (e) {
+                    // preventing the duplicate submissions if the current one is in progress
+                    if (form.classList.contains('is-uploading')) return false;
+                    if(!Number.isInteger(parseInt(document.querySelector('#v').value))){
+                        e.preventDefault()
+                        alert("Qualidade de compressão inválida, por favor tente novamente")
+                        return false
+                    }
+
+                    form.classList.add('is-uploading');
+                    form.classList.remove('is-error');
+
+                    if (isAdvancedUpload) // ajax file upload for modern browsers
+                    {
+                        e.preventDefault();
+
+                        // gathering the form data
+                        var ajaxData = new FormData(form);
+                     
+                        if (droppedFiles) {
+                            Array.prototype.forEach.call(droppedFiles, function (file) {
+                                ajaxData = new FormData(form);
+                                ajaxData.append(input.getAttribute('name'), file);
+                            });
+                            
+                        }
+                        if(droppedFiles.length > 1){
+                            form.setAttribute("action", "./uploads")
+                        }else{
+                            form.setAttribute("action", "./upload2")
+                        }
+                        // ajax request
+                        var ajax = new XMLHttpRequest();
+                        ajax.responseType = 'blob';
+                        ajax.open(form.getAttribute('method'), form.getAttribute('action'), true);
+
+                        ajax.onload = async function () {
+                            form.classList.remove('is-uploading');
+                            if (ajax.status >= 200 && ajax.status < 400) {
+                                console.log(ajax)
+                               
+                                const m = ajax.getResponseHeader('name-file')
+                                const myHeader = m
+                                var a = document.createElement('a');
+                                var url = window.URL.createObjectURL(ajax.response, {type: "application/zip"});
+                                a.href = url;
+                                a.download = myHeader;
+                                document.body.append(a);
+                                a.click();
+                                a.remove();
+                                window.URL.revokeObjectURL(url);
+                            }
+                            else{
+
+                                console.log(await ajax.response.text())
+                                
+                                alert(await ajax.response.text());
+                            }
+                        };
+
+                        ajax.onerror = function () {
+                            form.classList.remove('is-uploading');
+                            alert('Error. Please, try again!');
+                        };
+
+                        ajax.send(ajaxData);
+                    }
+                    else // fallback Ajax solution upload for older browsers
+                    {
+                        var iframeName = 'uploadiframe' + new Date().getTime(),
+                            iframe = document.createElement('iframe');
+
+                        $iframe = $('<iframe name="' + iframeName + '" style="display: none;"></iframe>');
+
+                        iframe.setAttribute('name', iframeName);
+                        iframe.style.display = 'none';
+
+                        document.body.appendChild(iframe);
+                        form.setAttribute('target', iframeName);
+
+                        iframe.addEventListener('load', function () {
+                            var data = JSON.parse(iframe.contentDocument.body.innerHTML);
+                            form.classList.remove('is-uploading')
+                            form.classList.add(data.success == true ? 'is-success' : 'is-error')
+                            form.removeAttribute('target');
+                            if (!data.success) errorMsg.textContent = data.error;
+                            iframe.parentNode.removeChild(iframe);
+                        });
+                    }
+                });
+
+
+                // restart the form if has a state of error/success
+                Array.prototype.forEach.call(restart, function (entry) {
+                    entry.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        form.classList.remove('is-error', 'is-success');
+                        input.click();
+                    });
+                });
+
+                // Firefox focus bug fix for file input
+                input.addEventListener('focus', function () { input.classList.add('has-focus'); });
+                input.addEventListener('blur', function () { input.classList.remove('has-focus'); });
+
+            });
+         
+        }(document, window, 0));
+        function setValue(a){
+            const d = document.getElementById('v')
+            if(a){
+                if(parseInt(d.value) > 0 && parseInt(d.value) < 5){
+                    d.value = parseInt(d.value)+1
+                }
+            }else{
+                if(parseInt(d.value) > 1){
+                    d.value = parseInt(d.value)-1
+                }
+            }
+            document.getElementById('range').innerHTML = d.value
+        }
+    </script>
+</body>
+
+</html>
