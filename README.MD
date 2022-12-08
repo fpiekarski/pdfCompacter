@@ -1,4 +1,4 @@
-# Foobar
+## Foobar
 
 PDF Compactor is a PDF Document Compressor, made in Node JS for linux SO
 
